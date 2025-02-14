@@ -8,6 +8,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.concurrent.Future;
 
 @Component
@@ -37,6 +38,9 @@ public class Producer {
     }
 
     public void close() {
-        kafkaProducer.close();
+        if (kafkaProducer != null) {
+            kafkaProducer.flush();
+            kafkaProducer.close(Duration.ofMillis(10));
+        }
     }
 }
