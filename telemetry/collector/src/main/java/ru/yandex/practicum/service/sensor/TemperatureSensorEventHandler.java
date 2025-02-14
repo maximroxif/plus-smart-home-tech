@@ -1,8 +1,8 @@
 package ru.yandex.practicum.service.sensor;
 
+import ru.yandex.practicum.kafka.telemetry.event.TemperatureSensorAvro;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.TemperatureSensorAvro;
 import ru.yandex.practicum.model.sensor.SensorEvent;
 import ru.yandex.practicum.model.sensor.SensorEventType;
 import ru.yandex.practicum.model.sensor.TemperatureSensorEvent;
@@ -24,6 +24,9 @@ public class TemperatureSensorEventHandler extends BaseEventHandler<TemperatureS
             }
 
             return new TemperatureSensorAvro(
+                    tempEvent.getId(),
+                    tempEvent.getHubId(),
+                    tempEvent.getTimestamp(),
                     tempEvent.getTemperatureC(),
                     tempEvent.getTemperatureF()
             );

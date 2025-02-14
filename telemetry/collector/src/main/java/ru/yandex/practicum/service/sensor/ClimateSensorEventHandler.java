@@ -1,9 +1,9 @@
 package ru.yandex.practicum.service.sensor;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.kafka.telemetry.event.ClimateSensorAvro;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.ClimateSensorAvro;
 import ru.yandex.practicum.model.sensor.ClimateSensorEvent;
 import ru.yandex.practicum.model.sensor.SensorEvent;
 import ru.yandex.practicum.model.sensor.SensorEventType;

@@ -1,11 +1,11 @@
 package ru.yandex.practicum.service.hub;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.kafka.telemetry.event.DeviceActionAvro;
+import ru.yandex.practicum.kafka.telemetry.event.ScenarioAddedEventAvro;
+import ru.yandex.practicum.kafka.telemetry.event.ScenarioConditionAvro;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.DeviceActionAvro;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.ScenarioAddedEventAvro;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.ScenarioConditionAvro;
 import ru.yandex.practicum.model.hub.DeviceAction;
 import ru.yandex.practicum.model.hub.HubEvent;
 import ru.yandex.practicum.model.hub.HubEventType;
@@ -51,8 +51,8 @@ public class ScenarioAddedEventHandler extends BaseHubHandler<ScenarioAddedEvent
     private ScenarioConditionAvro mapScenarioConditionToAvro(ScenarioCondition condition) {
         return new ScenarioConditionAvro(
                 condition.getSensorId(),
-                ru.yandex.practicum.kafkaConfig.telemetry.event.ConditionTypeAvro.valueOf(condition.getType().name()),
-                ru.yandex.practicum.kafkaConfig.telemetry.event.ConditionOperationAvro.valueOf(condition.getOperation().name()),
+                ru.yandex.practicum.kafka.telemetry.event.ConditionTypeAvro.valueOf(condition.getType().name()),
+                ru.yandex.practicum.kafka.telemetry.event.ConditionOperationAvro.valueOf(condition.getOperation().name()),
                 condition.getValue()
         );
     }
@@ -60,7 +60,7 @@ public class ScenarioAddedEventHandler extends BaseHubHandler<ScenarioAddedEvent
     private DeviceActionAvro mapDeviceActionToAvro(DeviceAction action) {
         return new DeviceActionAvro(
                 action.getSensorId(),
-                ru.yandex.practicum.kafkaConfig.telemetry.event.ActionTypeAvro.valueOf(action.getType().name()),
+                ru.yandex.practicum.kafka.telemetry.event.ActionTypeAvro.valueOf(action.getType().name()),
                 action.getValue()
         );
     }

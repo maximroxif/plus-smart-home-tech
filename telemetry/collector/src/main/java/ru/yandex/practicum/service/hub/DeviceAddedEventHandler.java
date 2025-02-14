@@ -1,10 +1,10 @@
 package ru.yandex.practicum.service.hub;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.kafka.telemetry.event.DeviceAddedEventAvro;
+import ru.yandex.practicum.kafka.telemetry.event.DeviceTypeAvro;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.DeviceAddedEventAvro;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.DeviceTypeAvro;
 import ru.yandex.practicum.model.hub.DeviceAddedEvent;
 import ru.yandex.practicum.model.hub.HubEvent;
 import ru.yandex.practicum.model.hub.HubEventType;

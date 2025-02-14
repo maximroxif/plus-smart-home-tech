@@ -1,9 +1,9 @@
 package ru.yandex.practicum.service.hub;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.kafka.telemetry.event.ScenarioRemovedEventAvro;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.ScenarioRemovedEventAvro;
 import ru.yandex.practicum.model.hub.HubEvent;
 import ru.yandex.practicum.model.hub.HubEventType;
 import ru.yandex.practicum.model.hub.ScenarioRemovedEvent;

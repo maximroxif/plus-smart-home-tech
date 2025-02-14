@@ -1,9 +1,9 @@
 package ru.yandex.practicum.service.sensor;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.kafka.telemetry.event.MotionSensorAvro;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.kafkaConfig.telemetry.event.MotionSensorAvro;
 import ru.yandex.practicum.model.sensor.MotionSensorEvent;
 import ru.yandex.practicum.model.sensor.SensorEvent;
 import ru.yandex.practicum.model.sensor.SensorEventType;
