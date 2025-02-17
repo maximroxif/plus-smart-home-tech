@@ -11,26 +11,28 @@ import org.apache.kafka.common.serialization.Serializer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+
 public class BaseAvroSerializer<T extends GenericRecord> implements Serializer<T> {
+
     @Override
     public byte[] serialize(String topic, T data) {
-
         final EncoderFactory encoderFactory = EncoderFactory.get();
-        BinaryEncoder encoder;
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            byte[] result = null;
-            encoder = encoderFactory.binaryEncoder(out, null);
             if (data != null) {
+                if (data.getSchema() == null) {
+                    throw new SerializationException("Schema cannot be null for the record");
+                }
+
+                BinaryEncoder encoder = encoderFactory.binaryEncoder(out, null);
                 DatumWriter<T> writer = new SpecificDatumWriter<>(data.getSchema());
                 writer.write(data, encoder);
                 encoder.flush();
-                result = out.toByteArray();
+                return out.toByteArray();
             }
-            return result;
+            return null;
         } catch (IOException ex) {
-            throw new SerializationException("Serialization error ", ex);
+            throw new SerializationException("Data deserialization error for the topic: " + topic, ex);
         }
-
     }
 }

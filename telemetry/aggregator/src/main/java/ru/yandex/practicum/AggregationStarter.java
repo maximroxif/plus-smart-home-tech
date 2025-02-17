@@ -1,6 +1,5 @@
 package ru.yandex.practicum;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -9,7 +8,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorStateAvro;
@@ -24,20 +23,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AggregationStarter {
 
-    private final KafkaProducer<String, SensorsSnapshotAvro> producer;
     private final KafkaConsumer<String, SensorEventAvro> consumer;
+    private final KafkaProducer<String, SensorsSnapshotAvro> producer;
     private final Map<String, SensorsSnapshotAvro> snapshots = new HashMap<>();
     private final EnumMap<KafkaConfig.TopicType, String> topics;
     private final KafkaConfig kafkaConfig;
 
-
-    @Autowired
     public AggregationStarter(EnumMap<KafkaConfig.TopicType, String> topics, KafkaConfig kafkaConfig) {
         this.topics = topics;
         this.kafkaConfig = kafkaConfig;
@@ -45,70 +42,68 @@ public class AggregationStarter {
         this.consumer = new KafkaConsumer<>(getPropertiesConsumerSensor());
     }
 
-
     public void start() {
         final String telemetrySensors = topics.get(KafkaConfig.TopicType.TELEMETRY_SENSORS);
         final String telemetrySnapshots = topics.get(KafkaConfig.TopicType.TELEMETRY_SNAPSHOTS);
 
+        AtomicBoolean running = new AtomicBoolean(true);
+
         try {
             consumer.subscribe(Collections.singletonList(telemetrySensors));
-            log.info("подписка на топик : {}", telemetrySensors);
+            log.info("Subscribed to topic: {}", telemetrySensors);
 
-            while (true) {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                running.set(false);
+                consumer.wakeup();
+            }));
+
+            while (running.get()) {
                 ConsumerRecords<String, SensorEventAvro> records = consumer.poll(Duration.ofMillis(100));
 
-                if (records.isEmpty()) {
-                    continue;
-                }
+                if (!records.isEmpty()) {
+                    for (ConsumerRecord<String, SensorEventAvro> record : records) {
+                        processEvent(record.value(), telemetrySnapshots);
+                    }
 
-                for (ConsumerRecord<String, SensorEventAvro> record : records) {
-                    SensorEventAvro event = record.value();
-
-                    updateState(event).ifPresent(snapshot -> {
-                        try {
-
-                            producer.send(new ProducerRecord<>(telemetrySnapshots, snapshot.getHubId(), snapshot), (metadata, exception) -> {
-                            });
-                            log.info("Snapshot hubId {} -> топик {}", snapshot.getHubId(), telemetrySnapshots);
-                        } catch (Exception e) {
-                            log.error("Ошибка при отправке snapshot в топик", e);
-                        }
-                    });
-                }
-
-                try {
-                    consumer.commitSync();
-                } catch (Exception e) {
-                    log.error("ошибка в commitSync", e);
+                    try {
+                        consumer.commitSync();
+                    } catch (Exception e) {
+                        log.error("Error committing offsets", e);
+                    }
                 }
             }
+        } catch (WakeupException ignored) {
+
         } catch (Exception e) {
-            log.error("ошибка ", e);
+            log.error("An unexpected error occurred", e);
         } finally {
-            try {
-                producer.flush();
-                producer.close();
-                consumer.close();
-            } catch (Exception e) {
-                log.error("ошибка при закрытии ", e);
-            }
+            safeClose(producer, consumer);
         }
     }
 
-
+    private void processEvent(SensorEventAvro event, String telemetrySnapshots) {
+        updateState(event).ifPresent(snapshot -> {
+            try {
+                producer.send(new ProducerRecord<>(telemetrySnapshots, snapshot.getHubId(), snapshot));
+                log.info("Snapshot for hubId {} sent to topic {}", snapshot.getHubId(), telemetrySnapshots);
+            } catch (Exception e) {
+                log.error("Error sending snapshot to topic", e);
+            }
+        });
+    }
 
     public Optional<SensorsSnapshotAvro> updateState(SensorEventAvro event) {
-        SensorsSnapshotAvro snapshot = snapshots.getOrDefault(event.getHubId(),
+        SensorsSnapshotAvro snapshot = snapshots.computeIfAbsent(event.getHubId(), k ->
                 SensorsSnapshotAvro.newBuilder()
                         .setHubId(event.getHubId())
-                        .setTimestamp(Instant.ofEpochSecond(System.currentTimeMillis()))
+                        .setTimestamp(Instant.now())
                         .setSensorsState(new HashMap<>())
                         .build());
 
         SensorStateAvro oldState = snapshot.getSensorsState().get(event.getId());
-        if (oldState != null
-            && !oldState.getTimestamp().isBefore(Instant.ofEpochSecond(event.getTimestamp()))
-            && oldState.getData().equals(event.getPayload())) {
+        if (oldState != null &&
+                !oldState.getTimestamp().isBefore(Instant.ofEpochSecond(event.getTimestamp())) &&
+                oldState.getData().equals(event.getPayload())) {
             return Optional.empty();
         }
 
@@ -118,11 +113,7 @@ public class AggregationStarter {
                 .build();
 
         snapshot.getSensorsState().put(event.getId(), newState);
-
         snapshot.setTimestamp(Instant.ofEpochSecond(event.getTimestamp()));
-
-        snapshots.put(event.getHubId(), snapshot);
-
         return Optional.of(snapshot);
     }
 
@@ -144,6 +135,15 @@ public class AggregationStarter {
         return config;
     }
 
-
-
+    private void safeClose(AutoCloseable... resources) {
+        for (AutoCloseable resource : resources) {
+            if (resource != null) {
+                try {
+                    resource.close();
+                } catch (Exception e) {
+                    log.error("Failed to close resource", e);
+                }
+            }
+        }
+    }
 }

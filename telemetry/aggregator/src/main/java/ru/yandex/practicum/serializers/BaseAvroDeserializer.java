@@ -7,6 +7,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
+import org.springframework.lang.NonNull;
 
 import java.io.ByteArrayInputStream;
 
@@ -15,11 +16,12 @@ public class BaseAvroDeserializer<T extends SpecificRecordBase> implements Deser
     private final Schema schema;
     private final DecoderFactory decoderFactory;
 
-    public BaseAvroDeserializer(Schema schema) {
+
+    public BaseAvroDeserializer(@NonNull Schema schema) {
         this(DecoderFactory.get(), schema);
     }
 
-    public BaseAvroDeserializer(DecoderFactory decoderFactory, Schema schema) {
+    public BaseAvroDeserializer(@NonNull DecoderFactory decoderFactory, @NonNull Schema schema) {
         this.decoderFactory = decoderFactory;
         this.schema = schema;
     }
@@ -29,11 +31,11 @@ public class BaseAvroDeserializer<T extends SpecificRecordBase> implements Deser
         if (data == null) {
             return null;
         }
-        try {
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
             DatumReader<T> reader = new SpecificDatumReader<>(schema);
-            return reader.read(null, decoderFactory.binaryDecoder(new ByteArrayInputStream(data), null));
+            return reader.read(null, decoderFactory.binaryDecoder(inputStream, null));
         } catch (Exception e) {
-            throw new SerializationException("Ошибка десериализации данных", e);
+            throw new SerializationException("Data deserialization error for the topic: " + topic, e);
         }
     }
 }
