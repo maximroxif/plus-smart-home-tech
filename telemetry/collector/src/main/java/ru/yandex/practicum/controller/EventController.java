@@ -16,6 +16,7 @@ import ru.yandex.practicum.service.EventService;
 public class EventController {
     private final EventService eventService;
 
+
     @PostMapping("/sensors")
     public void collectSensorEvent(@Valid @RequestBody SensorEvent event) {
         eventService.addSensorEvent(event);
