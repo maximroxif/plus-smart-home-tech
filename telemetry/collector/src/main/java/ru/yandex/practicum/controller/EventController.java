@@ -22,46 +22,56 @@ import java.util.stream.Collectors;
 public class EventController extends CollectorControllerGrpc.CollectorControllerImplBase {
 
     private static final Logger log = LoggerFactory.getLogger(EventController.class);
+
     private final Map<HubEventProto.PayloadCase, HubHandler> hubEventHandlerMap;
     private final Map<SensorEventProto.PayloadCase, SensorHandler> sensorEventHandlerMap;
 
-    public EventController(Set<HubHandler> hubEventHandlerSet,
-                           Set<SensorHandler> sensorEventHandlerSet) {
-        this.hubEventHandlerMap = hubEventHandlerSet.stream()
+    public EventController(Set<HubHandler> hubHandlers, Set<SensorHandler> sensorHandlers) {
+        this.hubEventHandlerMap = hubHandlers.stream()
                 .collect(Collectors.toMap(HubHandler::getMessageType, Function.identity()));
-        this.sensorEventHandlerMap = sensorEventHandlerSet.stream()
+        this.sensorEventHandlerMap = sensorHandlers.stream()
                 .collect(Collectors.toMap(SensorHandler::getMessageType, Function.identity()));
     }
 
     @Override
     public void collectHubEvent(HubEventProto request, StreamObserver<Empty> responseObserver) {
         try {
-            log.info("-> Hub event: {}", request);
-            hubEventHandlerMap.get(request.getPayloadCase()).handle(request);
-            responseObserver.onNext(Empty.getDefaultInstance());
-            responseObserver.onCompleted();
+            log.info("Received Hub event: {}", request);
+            HubHandler handler = hubEventHandlerMap.get(request.getPayloadCase());
+            if (handler != null) {
+                handler.handle(request);
+                responseObserver.onNext(Empty.getDefaultInstance());
+                responseObserver.onCompleted();
+            } else {
+                log.warn("No handler found for Hub event type: {}", request.getPayloadCase());
+                responseObserver.onError(new StatusRuntimeException(
+                        Status.INVALID_ARGUMENT.withDescription("No handler for this event type")));
+            }
         } catch (Exception e) {
+            log.error("Error handling Hub event", e);
             responseObserver.onError(new StatusRuntimeException(
-                    Status.INTERNAL
-                            .withDescription(e.getLocalizedMessage())
-                            .withCause(e)
-            ));
+                    Status.INTERNAL.withDescription(e.getMessage()).withCause(e)));
         }
     }
 
     @Override
     public void collectSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
         try {
-            log.info("-> Sensor event: {}", request);
-            sensorEventHandlerMap.get(request.getPayloadCase()).handle(request);
-            responseObserver.onNext(Empty.getDefaultInstance());
-            responseObserver.onCompleted();
+            log.info("Received Sensor event: {}", request);
+            SensorHandler handler = sensorEventHandlerMap.get(request.getPayloadCase());
+            if (handler != null) {
+                handler.handle(request);
+                responseObserver.onNext(Empty.getDefaultInstance());
+                responseObserver.onCompleted();
+            } else {
+                log.warn("No handler found for Sensor event type: {}", request.getPayloadCase());
+                responseObserver.onError(new StatusRuntimeException(
+                        Status.INVALID_ARGUMENT.withDescription("No handler for this event type")));
+            }
         } catch (Exception e) {
+            log.error("Error handling Sensor event", e);
             responseObserver.onError(new StatusRuntimeException(
-                    Status.INTERNAL
-                            .withDescription(e.getLocalizedMessage())
-                            .withCause(e)
-            ));
+                    Status.INTERNAL.withDescription(e.getMessage()).withCause(e)));
         }
     }
 }

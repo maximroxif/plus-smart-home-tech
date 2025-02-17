@@ -11,16 +11,24 @@ import ru.yandex.practicum.kafkaConfig.Producer;
 @AllArgsConstructor
 public abstract class BaseHubHandler<T extends SpecificRecordBase> implements HubHandler {
 
-    private final Config config;
-    private final Producer producer;
+    protected final Config kafkaConfig;
+    protected final Producer kafkaEventProducer;
     private static final String HUB_TOPIC = "telemetry.hubs.v1";
 
     protected abstract T mapToAvro(HubEventProto event);
 
     @Override
     public void handle(HubEventProto event) {
-        T protoEvent = mapToAvro(event);
-        log.info("Отправка события {} в топик {}", getMessageType(), HUB_TOPIC);
-        producer.send(HUB_TOPIC, event.getHubId(), protoEvent);
+        T avroEvent = mapToAvro(event);
+        if (avroEvent == null) {
+            log.error("Failed to map event to Avro: {}", event);
+            return;
+        }
+        try {
+            log.info("Sending event {} to topic {}", getMessageType(), HUB_TOPIC);
+            kafkaEventProducer.send(HUB_TOPIC, event.getHubId(), avroEvent);
+        } catch (Exception e) {
+            log.error("Error sending event to Kafka topic {}: {}", HUB_TOPIC, e.getMessage(), e);
+        }
     }
 }

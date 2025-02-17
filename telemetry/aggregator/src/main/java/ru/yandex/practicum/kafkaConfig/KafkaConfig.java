@@ -29,8 +29,7 @@ public class KafkaConfig {
                 case "telemetry-snapshots" -> {
                     return TopicType.TELEMETRY_SNAPSHOTS;
                 }
-                default -> throw new RuntimeException("Топик не найден");
-
+                default -> throw new IllegalArgumentException("Unknown topic type: " + type);
             }
         }
     }
