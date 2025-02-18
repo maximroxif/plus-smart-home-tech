@@ -1,24 +1,34 @@
 package ru.yandex.practicum.service.handler;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.springframework.stereotype.Component;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.model.hub.HubEvent;
 
-@Component
-@RequiredArgsConstructor
+@Slf4j
+@AllArgsConstructor
 public abstract class BaseHubHandler<T extends SpecificRecordBase> implements HubHandler {
 
-    private final Config config;
-    private final Producer producer;
+    protected final Config kafkaConfig;
+    protected final Producer kafkaEventProducer;
     private static final String HUB_TOPIC = "telemetry.hubs.v1";
 
-    protected abstract T mapToAvro(HubEvent event);
+    protected abstract T mapToAvro(HubEventProto event);
 
-    public void handle(HubEvent event) {
+    @Override
+    public void handle(HubEventProto event) {
         T avroEvent = mapToAvro(event);
-        producer.send(HUB_TOPIC, event.getHubId(), avroEvent);
+        if (avroEvent == null) {
+            log.error("Failed to map event to Avro: {}", event);
+            return;
+        }
+        try {
+            log.info("Sending event {} to topic {}", getMessageType(), HUB_TOPIC);
+            kafkaEventProducer.send(HUB_TOPIC, event.getHubId(), avroEvent);
+        } catch (Exception e) {
+            log.error("Error sending event to Kafka topic {}: {}", HUB_TOPIC, e.getMessage(), e);
+        }
     }
 }

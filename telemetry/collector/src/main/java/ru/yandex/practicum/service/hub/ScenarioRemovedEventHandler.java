@@ -1,14 +1,11 @@
 package ru.yandex.practicum.service.hub;
 
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
 import ru.yandex.practicum.kafka.telemetry.event.ScenarioRemovedEventAvro;
 import ru.yandex.practicum.kafkaConfig.Config;
 import ru.yandex.practicum.kafkaConfig.Producer;
-import ru.yandex.practicum.model.hub.HubEvent;
-import ru.yandex.practicum.model.hub.HubEventType;
-import ru.yandex.practicum.model.hub.ScenarioRemovedEvent;
 import ru.yandex.practicum.service.handler.BaseHubHandler;
-
 
 @Service
 public class ScenarioRemovedEventHandler extends BaseHubHandler<ScenarioRemovedEventAvro> {
@@ -17,21 +14,14 @@ public class ScenarioRemovedEventHandler extends BaseHubHandler<ScenarioRemovedE
     }
 
     @Override
-    protected ScenarioRemovedEventAvro mapToAvro(HubEvent event) {
-        if (!(event instanceof ScenarioRemovedEvent scenarioRemovedEvent)) {
-            throw new IllegalArgumentException("Invalid event type or null value received.");
-        }
+    protected ScenarioRemovedEventAvro mapToAvro(HubEventProto event) {
+        var scenarioRemovedEvent = event.getScenarioRemoved();
 
-        try {
-            return new ScenarioRemovedEventAvro(scenarioRemovedEvent.getName());
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to convert scenario removal event to Avro", e);
-        }
+        return new ScenarioRemovedEventAvro(scenarioRemovedEvent.getName());
     }
 
-
     @Override
-    public HubEventType getMessageType() {
-        return HubEventType.SCENARIO_REMOVED;
+    public HubEventProto.PayloadCase getMessageType() {
+        return HubEventProto.PayloadCase.SCENARIO_REMOVED;
     }
 }

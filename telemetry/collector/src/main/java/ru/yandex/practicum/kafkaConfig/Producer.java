@@ -20,27 +20,28 @@ public class Producer {
 
     public <T extends SpecificRecordBase> void send(String topic, String key, T event) {
         ProducerRecord<String, SpecificRecordBase> record = new ProducerRecord<>(topic, key, event);
-        log.info("Sending an event to topic: {} with key: {} Event: {}", topic, key, event);
+        log.info("Sending event to topic: {} with key: {}", topic, key);
 
         try {
-            Future<RecordMetadata> future = kafkaProducer.send(record, (metadata, exception) -> {
-                if (exception != null) {
-                    log.error("Error when posting a message to a topic: {}", topic, exception);
-                } else {
-                    log.info("Message successfully posted in topic: {}, partition: {}, offset: {}",
-                            metadata.topic(), metadata.partition(), metadata.offset());
-                }
-            });
+            Future<RecordMetadata> future = kafkaProducer.send(record);
+            future.get();
+            log.info("Message successfully posted in topic: {}, partition: {}, offset: {}",
+                    future.get().topic(), future.get().partition(), future.get().offset());
         } catch (Exception e) {
-            log.error("Error when posting a message to a topic: {}", topic, e);
-            throw new RuntimeException("Error when sending a message in Kafka", e);
+            log.error("Error sending message to topic: {}", topic, e);
+            throw new RuntimeException("Failed to send message to Kafka", e);
         }
     }
 
+
     public void close() {
-        if (kafkaProducer != null) {
-            kafkaProducer.flush();
-            kafkaProducer.close(Duration.ofMillis(10));
+        try {
+            if (kafkaProducer != null) {
+                kafkaProducer.flush();
+                kafkaProducer.close(Duration.ofMillis(1000));
+            }
+        } catch (Exception e) {
+            log.error("Error while closing Kafka producer", e);
         }
     }
 }
