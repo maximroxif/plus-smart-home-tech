@@ -66,6 +66,7 @@ public class AggregationStarter {
                     }
 
                     try {
+                        producer.flush();
                         consumer.commitSync();
                     } catch (Exception e) {
                         log.error("Error committing offsets", e);
@@ -139,6 +140,11 @@ public class AggregationStarter {
         for (AutoCloseable resource : resources) {
             if (resource != null) {
                 try {
+                    if (resource instanceof KafkaProducer<?, ?>) {
+                        ((KafkaProducer<?, ?>) resource).flush();
+                    } else if (resource instanceof KafkaConsumer<?, ?>) {
+                        ((KafkaConsumer<?, ?>) resource).commitSync();
+                    }
                     resource.close();
                 } catch (Exception e) {
                     log.error("Failed to close resource", e);
