@@ -20,3 +20,7 @@ eureka:
 
 server:
   port: 0
+
+logging:
+  level:
+    org.springframework.cloud: DEBUG

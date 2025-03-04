@@ -1,2 +1,6 @@
+spring:
+  application:
+    name: collector
+
 kafka:
-    bootstrapServer: localhost:9092
+  bootstrapServer: localhost:9092
