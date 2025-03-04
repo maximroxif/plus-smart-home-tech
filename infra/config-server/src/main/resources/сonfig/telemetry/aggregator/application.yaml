@@ -18,7 +18,7 @@ aggregator:
     producer:
       bootstrap-servers: localhost:9092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: ru.yandex.practicum.serializers.BaseAvroSerializer
+      value-serializer: ru.yandex.practicum.serializers.GeneralAvroSerializer
 
 
     consumer:
