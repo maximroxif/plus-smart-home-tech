@@ -1,1 +1,2 @@
-kafka.bootstrap.servers = localhost:9092
+kafka:
+  bootstrapServer: localhost:9092
