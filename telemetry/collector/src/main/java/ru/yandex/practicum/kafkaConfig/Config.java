@@ -15,7 +15,6 @@ import java.util.Map;
 
 @Configuration
 @ConfigurationProperties("collector.kafka")
-
 @Getter
 public class Config {
 

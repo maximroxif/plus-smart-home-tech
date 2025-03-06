@@ -1,21 +1,15 @@
 spring:
   application:
     name: analyzer
-
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/analyzer
+    url: jdbc:postgresql://localhost:5433/analyzer
     username: postgres
     password: postgres
-jpa:
-  properties:
-    hibernate:
-      dialect=org:
-        hibernate:
-          dialect:
-            PostgreSQLDialect:
-
-
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 kafka:
   hub-consumer-properties:
     "bootstrap.servers": localhost:9092
@@ -30,7 +24,6 @@ kafka:
   topics:
     hubs-events: telemetry.hubs.v1
     sensors-snapshot: telemetry.snapshots.v1
-
 grpc:
   client:
     hub-router:
