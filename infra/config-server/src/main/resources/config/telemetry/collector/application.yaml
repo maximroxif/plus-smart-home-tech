@@ -7,4 +7,4 @@ kafka:
 
 grpc:
   server:
-    port: 9091
+    port: 59091

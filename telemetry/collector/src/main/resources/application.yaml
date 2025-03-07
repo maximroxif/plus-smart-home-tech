@@ -24,3 +24,5 @@ server:
 logging:
   level:
     org.springframework.cloud: DEBUG
+    net.devh.boot.grpc: DEBUG
+    ru.yandex.practicum: DEBUG
