@@ -11,7 +11,7 @@ spring:
         max-interval: 6000
       discovery:
         enabled: true
-        serviceId: config-server
+        service-id: config-server
 
 eureka:
   client:
@@ -20,3 +20,9 @@ eureka:
 
 server:
   port: 0
+
+logging:
+  level:
+    org.springframework.cloud: DEBUG
+    net.devh.boot.grpc: DEBUG
+    ru.yandex.practicum: DEBUG
