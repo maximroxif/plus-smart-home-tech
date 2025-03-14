@@ -43,3 +43,13 @@ services:
       - POSTGRES_DB=analyzer
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+
+  shopping_cart-db:
+    image: postgres:16.1
+    container_name: shopping_cart
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=shopping_cart
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
