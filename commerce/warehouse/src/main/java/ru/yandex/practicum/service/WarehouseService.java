@@ -7,20 +7,20 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.dto.AddProductToWarehouseRequest;
+import ru.yandex.practicum.dto.AddressDto;
+import ru.yandex.practicum.dto.AssemblyProductForOrderFromShoppingCartRequest;
+import ru.yandex.practicum.dto.BookedProductDto;
+import ru.yandex.practicum.dto.NewProductInWarehouseRequest;
+import ru.yandex.practicum.dto.ProductDto;
+import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
 import ru.yandex.practicum.dto.ShoppingCartDto;
 import ru.yandex.practicum.model.Booking;
 import ru.yandex.practicum.model.Dimension;
 import ru.yandex.practicum.model.WarehouseProduct;
 import ru.yandex.practicum.repository.BookingRepository;
 import ru.yandex.practicum.repository.WarehouseProductRepository;
-import ru.yandex.practicum.dto.ProductDto;
-import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
 import ru.yandex.practicum.shoppingStore.ShoppingStoreClient;
-import ru.yandex.practicum.dto.AddProductToWarehouseRequest;
-import ru.yandex.practicum.dto.AddressDto;
-import ru.yandex.practicum.dto.AssemblyProductForOrderFromShoppingCartRequest;
-import ru.yandex.practicum.dto.BookedProductDto;
-import ru.yandex.practicum.dto.NewProductInWarehouseRequest;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -114,7 +114,7 @@ public class WarehouseService {
                 .build();
 
         bookingRepository.save(booking);
-        log.info("Order assembly completed for shopping cart ID: {}", shoppingCart.getShoppingCartId());
+        log.info("Products booked successfully for shopping cart ID: {}", shoppingCart.getShoppingCartId());
 
         return conversionService.convert(booking, BookedProductDto.class);
     }
@@ -131,7 +131,7 @@ public class WarehouseService {
             throw new NoSuchElementException("Shopping cart is empty or not found");
         }
 
-        log.info("Order assembly completed for shopping cart ID: {} and order ID: {}", request.getShoppingCartId(), request.getOrderId());
+        log.info("Order assembled successfully for shopping cart ID: {} and order ID: {}", request.getShoppingCartId(), request.getOrderId());
         return conversionService.convert(booking, BookedProductDto.class);
     }
 
@@ -147,7 +147,7 @@ public class WarehouseService {
         WarehouseProduct updatedProduct = warehouseProductRepository.save(product);
 
         updateProductQuantityState(request.getProductId(), updatedProduct.getQuantityAvailable());
-        log.info("Quantity updated for product: {}", request.getProductId());
+        log.info("Quantity updated successfully for product: {}", request.getProductId());
     }
 
     public AddressDto getWarehouseAddress() {

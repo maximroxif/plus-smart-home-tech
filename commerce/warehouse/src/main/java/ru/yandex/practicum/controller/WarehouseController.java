@@ -1,22 +1,17 @@
 package ru.yandex.practicum.controller;
 
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import ru.yandex.practicum.dto.ShoppingCartDto;
-import ru.yandex.practicum.service.WarehouseService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.dto.AddProductToWarehouseRequest;
 import ru.yandex.practicum.dto.AddressDto;
 import ru.yandex.practicum.dto.AssemblyProductForOrderFromShoppingCartRequest;
 import ru.yandex.practicum.dto.BookedProductDto;
 import ru.yandex.practicum.dto.NewProductInWarehouseRequest;
+import ru.yandex.practicum.dto.ShoppingCartDto;
+import ru.yandex.practicum.service.WarehouseService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -30,34 +25,45 @@ public class WarehouseController {
     private final WarehouseService warehouseService;
 
     @PutMapping
-    public void addNewProduct(@RequestBody @Valid NewProductInWarehouseRequest request) {
+    public ResponseEntity<Void> addNewProduct(@RequestBody @Valid NewProductInWarehouseRequest request) {
+        log.info("Adding new product to warehouse: {}", request);
         warehouseService.addNewProduct(request);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/return")
-    public void acceptReturn(@RequestBody Map<UUID, Integer> products) {
+    public ResponseEntity<Void> acceptReturn(@RequestBody Map<UUID, Integer> products) {
+        log.info("Accepting return of products: {}", products);
         warehouseService.acceptReturn(products);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/booking")
-    public BookedProductDto bookProductForShoppingCart(@RequestBody @Valid ShoppingCartDto cartDto) {
-        return warehouseService.bookProductForShoppingCart(cartDto);
+    public ResponseEntity<BookedProductDto> bookProductForShoppingCart(@RequestBody @Valid ShoppingCartDto cartDto) {
+        log.info("Booking products for shopping cart: {}", cartDto);
+        BookedProductDto bookedProduct = warehouseService.bookProductForShoppingCart(cartDto);
+        return ResponseEntity.ok(bookedProduct);
     }
 
     @PostMapping("/assembly")
-    public BookedProductDto assemblyProductForOrderFromShoppingCart(
+    public ResponseEntity<BookedProductDto> assemblyProductForOrderFromShoppingCart(
             @RequestBody @Valid AssemblyProductForOrderFromShoppingCartRequest request) {
-        return warehouseService.assemblyProductForOrderFromShoppingCart(request);
+        log.info("Assembling products for order from shopping cart: {}", request);
+        BookedProductDto assembledProduct = warehouseService.assemblyProductForOrderFromShoppingCart(request);
+        return ResponseEntity.ok(assembledProduct);
     }
 
     @PostMapping("/add")
-    public void addProductQuantity(@RequestBody @Valid AddProductToWarehouseRequest request) {
+    public ResponseEntity<Void> addProductQuantity(@RequestBody @Valid AddProductToWarehouseRequest request) {
+        log.info("Adding product quantity to warehouse: {}", request);
         warehouseService.addProductQuantity(request);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/address")
-    public AddressDto getWarehouseAddress() {
-        return warehouseService.getWarehouseAddress();
+    public ResponseEntity<AddressDto> getWarehouseAddress() {
+        log.info("Fetching warehouse address");
+        AddressDto address = warehouseService.getWarehouseAddress();
+        return ResponseEntity.ok(address);
     }
-
 }
