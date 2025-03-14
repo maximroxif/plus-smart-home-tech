@@ -3,8 +3,8 @@ package ru.yandex.practicum.mapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.model.Booking;
 import ru.yandex.practicum.dto.BookedProductDto;
+import ru.yandex.practicum.model.Booking;
 
 @Component
 @RequiredArgsConstructor
