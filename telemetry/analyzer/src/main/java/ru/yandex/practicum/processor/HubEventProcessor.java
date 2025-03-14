@@ -6,12 +6,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.kafka.telemetry.event.DeviceAddedEventAvro;
-import ru.yandex.practicum.kafka.telemetry.event.DeviceRemovedEventAvro;
-import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
-import ru.yandex.practicum.kafka.telemetry.event.ScenarioAddedEventAvro;
-import ru.yandex.practicum.kafka.telemetry.event.ScenarioRemovedEventAvro;
 import ru.yandex.practicum.kafkaConfig.KafkaConfig;
+import ru.yandex.practicum.kafka.telemetry.event.*;
 import ru.yandex.practicum.service.ScenarioService;
 import ru.yandex.practicum.service.SensorService;
 
@@ -40,7 +36,6 @@ public class HubEventProcessor implements Runnable {
 
             while (!Thread.currentThread().isInterrupted()) {
                 ConsumerRecords<String, HubEventAvro> records = hubConsumer.poll(Duration.ofMillis(100));
-
                 for (ConsumerRecord<String, HubEventAvro> record : records) {
                     try {
                         onMessage(record);
@@ -54,23 +49,19 @@ public class HubEventProcessor implements Runnable {
         }
     }
 
-    @KafkaListener(topics = "#{kafkaConfig.hubEventTopic}", groupId = "analyzer-hub-group")
+    @KafkaListener(topics = "#{@kafkaConfig.topics['hubs-events']}", groupId = "analyzer-hub-group")
     public void onMessage(ConsumerRecord<String, HubEventAvro> record) {
         HubEventAvro event = record.value();
-
         if (event == null) {
             log.warn("Received null event from Kafka");
             return;
         }
 
         Object eventPayload = event.getPayload();
-
         switch (eventPayload) {
             case DeviceAddedEventAvro deviceAddedEvent -> processDeviceAddedEvent(deviceAddedEvent, event.getHubId());
-            case DeviceRemovedEventAvro deviceRemovedEvent ->
-                    processDeviceRemovedEvent(deviceRemovedEvent, event.getHubId());
-            case ScenarioAddedEventAvro scenarioAddedEvent ->
-                    processScenarioAddedEvent(scenarioAddedEvent, event.getHubId());
+            case DeviceRemovedEventAvro deviceRemovedEvent -> processDeviceRemovedEvent(deviceRemovedEvent, event.getHubId());
+            case ScenarioAddedEventAvro scenarioAddedEvent -> processScenarioAddedEvent(scenarioAddedEvent, event.getHubId());
             case ScenarioRemovedEventAvro scenarioRemovedEvent -> processScenarioRemovedEvent(scenarioRemovedEvent);
             case null, default -> {
                 assert eventPayload != null;
