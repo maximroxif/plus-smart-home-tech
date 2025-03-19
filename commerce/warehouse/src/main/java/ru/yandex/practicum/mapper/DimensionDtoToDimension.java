@@ -3,8 +3,8 @@ package ru.yandex.practicum.mapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.model.Dimension;
 import ru.yandex.practicum.dto.DimensionDto;
+import ru.yandex.practicum.model.Dimension;
 
 @Component
 @RequiredArgsConstructor

@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.dto.NewProductInWarehouseRequest;
 import ru.yandex.practicum.model.Dimension;
 import ru.yandex.practicum.model.WarehouseProduct;
-import ru.yandex.practicum.dto.NewProductInWarehouseRequest;
 
 @Component
 @RequiredArgsConstructor

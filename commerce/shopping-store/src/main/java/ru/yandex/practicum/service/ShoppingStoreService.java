@@ -8,11 +8,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.model.Product;
-import ru.yandex.practicum.repository.ProductRepository;
 import ru.yandex.practicum.dto.PageableDto;
 import ru.yandex.practicum.dto.ProductDto;
 import ru.yandex.practicum.dto.SetProductQuantityStateRequest;
+import ru.yandex.practicum.model.Product;
+import ru.yandex.practicum.repository.ProductRepository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
